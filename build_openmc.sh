@@ -25,23 +25,24 @@ fi
 ####################################################################
 
 # HDF5 and CMake dependencies
-module load spack
+#module load spack
 module load cmake
-module load hdf5
+module load hdf5-serial/1.14.0
 
 # Note - If you have manually compiled HDF5, set the HDF5_ROOT
 # environment variable to your install location
 
 # Compiler dependency (llvm, oneapi)
 # On the Argonne JLSE cluster, use "module load llvm/master-nightly"
-module load llvm
+#module load llvm
+module load rocm
 
 # GPU target/compiler selection (full list in OpenMC's main directory
 # CmakePrests.json file at:
 # https://github.com/exasmr/openmc/blob/openmp-target-offload/CMakePresets.json)
 # (some options are llvm_a100, llvm_v100, llvm_mi100, llvm_mi250x, spirv_aot)
 # llvm_native will attempt to build for any GPUs detected on the node
-OPENMC_TARGET=llvm_native
+OPENMC_TARGET="$2"
 
 # If you are compiling for NVIDIA or Intel, you may want to enable
 # use of a vendor library to accelerate particle sorting.
@@ -99,7 +100,7 @@ echo "Install Name: $INSTALL_DIR"
 if [ "$MODE" = "all" ] || [ "$MODE" = "download" ]; then
 
 # Clone OpenMC source
-git clone --recursive https://github.com/exasmr/openmc.git
+git clone --recursive https://github.com/EthanLuisMcDonough/openmc.git
 
 # Clone benchmarks repository
 git clone https://github.com/jtramm/openmc_offloading_benchmarks.git
@@ -144,6 +145,8 @@ cmake_cmd="cmake                         \
 -Ddebug=${OPENMC_DEBUG_LINE_INFO}        \
 -Dcuda_thrust_sort=${OPENMC_NVIDIA_SORT} \
 -Dsycl_sort=${OPENMC_INTEL_SORT}         \
+-DCMAKE_C_COMPILER=/dev/shm/ethanmc/clang/install/bin/clang \
+-DCMAKE_CXX_COMPILER=/dev/shm/ethanmc/clang/install/bin/clang++ \
 -Dhip_thrust_sort=${OPENMC_AMD_SORT}"
 
 # Check if OPENMC_CXX_FLAGS is set and not empty
